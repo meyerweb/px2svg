@@ -45,7 +45,7 @@ function generateSVG($img) {
             $n = 1;
 
             while(
-                ($n+$n < $w) &&
+                ($x+$n < $w) &&
                 ($col == imagecolorat($img, ($x+$n), $y))
             ) {
                 $n++;
