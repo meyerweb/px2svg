@@ -45,8 +45,8 @@ class px2svg
      * @param GDImageIdentifier $img Raster image to convert to svg
      * @return string                   SVG xml
      */
-    public function renderSVG() {
 
+    public function generateSVG() {
         $width = imagesx($this->image); // image width
         $height = imagesy($this->image); // image height
 
@@ -77,8 +77,15 @@ class px2svg
 
         $svg .= '</svg>';
 
+        return $svg;
+    }
+
+    public function renderSVG() {
+
+        $svg = $this->generateSVG();
+
         header('Content-type: image/svg+xml');
-        echo $svg;
+        return $svg;
 
     }
 
