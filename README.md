@@ -22,3 +22,5 @@ This all originally started as a one-off experiment and a bit of a jape.  You ca
 [Eric Meyer](http://meyerweb.com/), sometime CSS guy.
 
 [Amelia Bellamy-Royds](https://github.com/AmeliaBR/), sometime SVG gal, added the check for runs of constant color, alpha transparency support, and made the output a valid, responsive SVG file.  Because she refused to accept that an SVG could be a less optimal image file format than a Windows .bmp bitmap file.
+
+[Robin Cafolla](https://github.com/robincafolla) made the script command-line usable and encapsulated for use in other code bases.
