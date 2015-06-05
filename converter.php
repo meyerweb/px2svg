@@ -54,7 +54,7 @@ function generateSVG($img) {
                 $color .= "\" fill-opacity=\"$alpha";
             }
 
-            $svg .= "<rect width=\"1\" x=\"$x\" height=\"$n\" y=\"$y\" fill=\"$color\"/>\n";
+            $svg .= "<rect x=\"$x\" y=\"$y\" width=\"1\" height=\"$n\" fill=\"$color\"/>\n";
         }
     }
 
