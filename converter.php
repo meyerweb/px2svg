@@ -6,13 +6,17 @@
  * @arg     string url      Takes a single string url or path to local image to
  *                          convert from raster to SVG.
  */
-if (count($argv) < 1) {
+if (php_sapi_name() == 'cli' && count($argv) < 1) {
     throw new \RuntimeException(
         'Too few arguments passed to converter'
     );
 }
 
+if(php_sapi_name() == 'cli') {
+
 $url = $argv[1];
+}
+
 
 $img = loadImage($url);
 if (!!$img) {
