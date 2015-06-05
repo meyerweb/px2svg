@@ -80,33 +80,5 @@ class px2svg
         return $svg;
     }
 
-    public function renderSVG() {
-
-        $svg = $this->generateSVG();
-
-        header('Content-type: image/svg+xml');
-        return $svg;
-
-    }
 
 }
-
-
-$converter = new px2svg();
-$url = 'meyer.png';
-echo $converter->loadImage($url)->renderSVG();
- * @author  Eric Meyers, Amelia Bellamy-Royds, Robin Cafolla, Neal Brooks
-
-class px2svg
-{
-
-        }
-        $this->image = imagecreatefromstring(file_get_contents($path));
-        return $this;
-    }
-
-    private function isUrl($url) {
-    }
-        $svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" shape-rendering=\"crispEdges\">";
-                $svg .= "<rect width=\"1\" x=\"$x\" height=\"$number_of_consecutive_pixels\" y=\"$y\" fill=\"$color\"/>\n";
-        $svg .= '</svg>';
