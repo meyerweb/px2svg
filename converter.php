@@ -6,28 +6,6 @@
  * @arg     string url      Takes a single string url or path to local image to
  *                          convert from raster to SVG.
  */
-//if (php_sapi_name() == 'cli' && count($argv) < 1) {
-//    throw new \RuntimeException(
-//        'Too few arguments passed to converter'
-//    );
-//}
-//
-//if (php_sapi_name() == 'cli') {
-//
-//    $url = $argv[1];
-//}
-
-
-//$img = loadImage($url);
-//if (!!$img) {
-//    header('Content-type: image/svg+xml');
-//    echo generateSVG($img);
-//} else {
-//    echo "<a href=\"$url\">Bad image file</a>";
-//}
-
-
-
 
 class px2svg
 {
@@ -67,7 +45,7 @@ class px2svg
      * @param GDImageIdentifier $img Raster image to convert to svg
      * @return string                   SVG xml
      */
-    public function generateSVG() {
+    public function renderSVG() {
 
         $width = imagesx($this->image); // image width
         $height = imagesy($this->image); // image height
@@ -98,15 +76,15 @@ class px2svg
         }
 
         $svg .= '</svg>';
-        return $svg;
+
+        header('Content-type: image/svg+xml');
+        echo $svg;
 
     }
 
 }
 
 
-$url = 'meyer.png';
-
 $converter = new px2svg();
-//header('Content-type: image/svg+xml');
-echo $converter->loadImage($url)->generateSVG();
+$url = 'meyer.png';
+echo $converter->loadImage($url)->renderSVG();
