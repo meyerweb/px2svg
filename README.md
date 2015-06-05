@@ -5,7 +5,7 @@ Turning raster images into SVG files, one pixel at a time.  Yes, really.
 
 ## What?
 
-The PHP accepts a raster image (GIF, PNG, JPEG, that sort of thing) and creates an SVG image that recreates the raster image.  It does this by drawing filled rectangles to recreate the pixels in the image.  In many cases, this is literally a 1-by-1 rectangle, but thanks to [Amelia Bellamy-Royds](https://github.com/AmeliaBR/), the code can do some basic color-run optimization.
+The PHP accepts a raster image (GIF, PNG, JPEG, that sort of thing) and creates an SVG image that recreates the raster image.  It does this by drawing filled rectangles to recreate the pixels in the image.  In many cases, this is literally a 1-by-1 rectangle, but it will check for runs of similar color (similar to GIF compression) and one rectangle per run.  It checks both horizontal and vertical runs to see which approach is more efficient, and returns the better option.
 
 The script requires [GD](http://php.net/manual/en/image.installation.php).
 
@@ -21,6 +21,8 @@ This all originally started as a one-off experiment and a bit of a jape.  You ca
 
 [Eric Meyer](http://meyerweb.com/), sometime CSS guy.
 
-[Amelia Bellamy-Royds](https://github.com/AmeliaBR/), sometime SVG gal, added the check for runs of constant color, alpha transparency support, and made the output a valid, responsive SVG file.  Because she refused to accept that an SVG could be a less optimal image file format than a Windows .bmp bitmap file.
+[Amelia Bellamy-Royds](https://github.com/AmeliaBR/), sometime SVG gal, added the check for runs of constant color and alpha transparency support.
 
 [Robin Cafolla](https://github.com/robincafolla) made the script command-line usable and encapsulated for use in other code bases.
+
+[Neal Brooks](https://github.com/nealio82) thoroughly refactored the code and removed curl dependency.
