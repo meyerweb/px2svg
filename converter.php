@@ -33,7 +33,8 @@ function generateSVG($img) {
     $w = imagesx($img); // image width
     $h = imagesy($img); // image height
     $n = 1; //number of consecutive pixels
-    $svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" shape-rendering=\"crispEdges\">";
+
+    $svgv = "<svg xmlns=\"http://www.w3.org/2000/svg\" shape-rendering=\"crispEdges\">";
     for ($x = 0; $x < $w; $x++) {
         for ($y = 0; $y < $h; $y = $y+$n) {
             $col = imagecolorat($img, $x, $y);
@@ -54,11 +55,40 @@ function generateSVG($img) {
                 $color .= "\" fill-opacity=\"$alpha";
             }
 
-            $svg .= "<rect x=\"$x\" y=\"$y\" width=\"1\" height=\"$n\" fill=\"$color\"/>\n";
+            $svgv .= "<rect x=\"$x\" y=\"$y\" width=\"1\" height=\"$n\" fill=\"$color\"/>\n";
         }
     }
+    $svgv .= '</svg>';
 
-    $svg .= '</svg>';
+    $n = 1; //reset number of consecutive pixels
+    $svgh = "<svg xmlns=\"http://www.w3.org/2000/svg\" shape-rendering=\"crispEdges\">";
+    for ($y = 0; $y < $h; $y++) {
+	    for ($x = 0; $x < $w; $x = $x+$n) {
+            $col = imagecolorat($img, $x, $y);
+            $n = 1;
+
+            while(
+                ($n+$n < $w) &&
+                ($col == imagecolorat($img, ($x+$n), $y))
+            ) {
+                $n++;
+            }
+
+            $rgb = imagecolorsforindex($img, $col);
+            $color = "rgb($rgb[red],$rgb[green],$rgb[blue])";
+
+            if ($rgb["alpha"] && ($rgb["alpha"] < 128 )) {
+                $alpha = (128 - $rgb["alpha"]) / 128;
+                $color .= "\" fill-opacity=\"$alpha";
+            }
+
+            $svgh .= "<rect x=\"$x\" y=\"$y\" width=\"$n\" height=\"1\" fill=\"$color\"/>\n";
+        }
+    }
+    $svgh .= '</svg>';
+
+	if (strlen($svgh) < strlen($svgv)) $svg = $svgh; else $svg = $svgv;
+
     return $svg;
 }
 
