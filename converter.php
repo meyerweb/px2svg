@@ -2,7 +2,7 @@
 /**
  * Flaming Shame Raster to SVG converter
  *
- * @author  Eric Meyers, Amelia Bellamy-Royds, Robin Cafolla, Neal Brooks
+ * @author  Eric Meyer, Amelia Bellamy-Royds, Robin Cafolla, Neal Brooks
  * @arg     string url      Takes a single string url or path to local image to
  *                          convert from raster to SVG.
  */
