@@ -30,23 +30,23 @@ else {
  * @return string                   SVG xml
  */
 function generateSVG($img) {
-    $w = imagesx($img); // image width
-    $h = imagesy($img); // image height
-    $n = 1; //number of consecutive pixels
+    $width = imagesx($img); // image width
+    $height = imagesy($img); // image height
+
     $svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" shape-rendering=\"crispEdges\">";
-    for ($x = 0; $x < $w; $x++) {
-        for ($y = 0; $y < $h; $y = $y+$n) {
-            $col = imagecolorat($img, $x, $y);
-            $n = 1;
+    for ($x = 0; $x < $width; $x++) {
+        for ($y = 0; $y < $height; $y = $y+$number_of_consecutive_pixels) {
+            $color_at_position = imagecolorat($img, $x, $y);
+            $number_of_consecutive_pixels = 1;
 
             while(
-                ($y+$n < $h) &&
-                ($col == imagecolorat($img, $x, ($y+$n)))
+                ($y+$number_of_consecutive_pixels < $height) &&
+                ($color_at_position == imagecolorat($img, $x, ($y+$number_of_consecutive_pixels)))
             ) {
-                $n++;
+                $number_of_consecutive_pixels++;
             }
 
-            $rgb = imagecolorsforindex($img, $col);
+            $rgb = imagecolorsforindex($img, $color_at_position);
             $color = "rgb($rgb[red],$rgb[green],$rgb[blue])";
 
             if ($rgb["alpha"] && ($rgb["alpha"] < 128 )) {
@@ -54,7 +54,7 @@ function generateSVG($img) {
                 $color .= "\" fill-opacity=\"$alpha";
             }
 
-            $svg .= "<rect width=\"1\" x=\"$x\" height=\"$n\" y=\"$y\" fill=\"$color\"/>\n";
+            $svg .= "<rect width=\"1\" x=\"$x\" height=\"$number_of_consecutive_pixels\" y=\"$y\" fill=\"$color\"/>\n";
         }
     }
 
