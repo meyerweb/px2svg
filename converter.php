@@ -63,9 +63,7 @@ function generateSVG($img) {
         }
     }
     $svgh .= '</svg>';
-
-	if (strlen($svgh) < strlen($svgv)) $svg = $svgh; else $svg = $svgv;
-
+    if (strlen($svgh) < strlen($svgv)) $svg = $svgh; else $svg = $svgv;
     return $svg;
 }
 
