@@ -5,7 +5,7 @@
 include 'converter.php';
 
 $converter = new px2svg();
-$url = "http://www.nealio.co.uk/images/Octocat.png";
+$url = "./gmail-bozo-tag.gif";
 
 header('Content-type: image/svg+xml');
 echo $converter->loadImage($url)->generateSVG();
