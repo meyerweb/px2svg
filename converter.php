@@ -1,105 +1,84 @@
 <?php
-
 /**
- * Generates svg from raster
+ * Flaming Shame Raster to SVG converter
  *
- * @param GDImageIdentifier $img    Raster image to convert to svg
- * @return string                   SVG xml
+ * @author  Eric Meyers, Amelia Bellamy-Royds, Robin Cafolla, Neal Brooks
+ * @arg     string url      Takes a single string url or path to local image to
+ *                          convert from raster to SVG.
  */
-function generateSVG($img) {
-    $w = imagesx($img); // image width
-    $h = imagesy($img); // image height
-    $n = 1; //number of consecutive pixels
 
-    $svgv = "<svg xmlns=\"http://www.w3.org/2000/svg\" shape-rendering=\"crispEdges\">";
-    for ($x = 0; $x < $w; $x++) {
-        for ($y = 0; $y < $h; $y = $y+$n) {
-            $col = imagecolorat($img, $x, $y);
-            $n = 1;
+class px2svg
+{
 
-            while(
-                ($y+$n < $h) &&
-                ($col == imagecolorat($img, $x, ($y+$n)))
-            ) {
-                $n++;
-            }
+    private $image;
 
-            $rgb = imagecolorsforindex($img, $col);
-            $color = "rgb($rgb[red],$rgb[green],$rgb[blue])";
 
-            if ($rgb["alpha"] && ($rgb["alpha"] < 128 )) {
-                $alpha = (128 - $rgb["alpha"]) / 128;
-                $color .= "\" fill-opacity=\"$alpha";
-            }
+    /**
+     * Get an image from a URL or file path
+     *
+     * @param string $url Url or path to local file
+     * @return GDImageIdentifier
+     */
+    public function loadImage($path)
+    {
 
-            $svgv .= "<rect x=\"$x\" y=\"$y\" width=\"1\" height=\"$n\" fill=\"$color\"/>\n";
+        if (!$this->localFileExists($path) && !$this->isUrl($path)) {
+            throw new \LogicException('Supplied URL / path is invalid.');
         }
+
+        $this->image = imagecreatefromstring(file_get_contents($path));
+
+        return $this;
     }
-    $svgv .= '</svg>';
 
-    $n = 1; //reset number of consecutive pixels
-    $svgh = "<svg xmlns=\"http://www.w3.org/2000/svg\" shape-rendering=\"crispEdges\">";
-    for ($y = 0; $y < $h; $y++) {
-	    for ($x = 0; $x < $w; $x = $x+$n) {
-            $col = imagecolorat($img, $x, $y);
-            $n = 1;
+    private function isUrl($url) {
+        return filter_var($url, FILTER_VALIDATE_URL);
+    }
 
-            while(
-                ($x+$n < $w) &&
-                ($col == imagecolorat($img, ($x+$n), $y))
-            ) {
-                $n++;
+    private function localFileExists($path) {
+        return file_exists($path);
+    }
+
+    /**
+     * Generates svg from raster
+     *
+     * @param GDImageIdentifier $img Raster image to convert to svg
+     * @return string                   SVG xml
+     */
+
+    public function generateSVG() {
+        $width = imagesx($this->image); // image width
+        $height = imagesy($this->image); // image height
+
+        $svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" shape-rendering=\"crispEdges\">";
+        for ($x = 0; $x < $width; $x++) {
+            for ($y = 0; $y < $height; $y = $y + $number_of_consecutive_pixels) {
+                $color_at_position = imagecolorat($this->image, $x, $y);
+                $number_of_consecutive_pixels = 1;
+
+                while (
+                    ($y + $number_of_consecutive_pixels < $height) &&
+                    ($color_at_position == imagecolorat($this->image, $x, ($y + $number_of_consecutive_pixels)))
+                ) {
+                    $number_of_consecutive_pixels++;
+                }
+
+                $rgb = imagecolorsforindex($this->image, $color_at_position);
+                $color = "rgb($rgb[red],$rgb[green],$rgb[blue])";
+
+                if ($rgb["alpha"] && ($rgb["alpha"] < 128)) {
+                    $alpha = (128 - $rgb["alpha"]) / 128;
+                    $color .= "\" fill-opacity=\"$alpha";
+                }
+
+                $svg .= "<rect width=\"1\" x=\"$x\" height=\"$number_of_consecutive_pixels\" y=\"$y\" fill=\"$color\"/>\n";
             }
-
-            $rgb = imagecolorsforindex($img, $col);
-            $color = "rgb($rgb[red],$rgb[green],$rgb[blue])";
-
-            if ($rgb["alpha"] && ($rgb["alpha"] < 128 )) {
-                $alpha = (128 - $rgb["alpha"]) / 128;
-                $color .= "\" fill-opacity=\"$alpha";
-            }
-
-            $svgh .= "<rect x=\"$x\" y=\"$y\" width=\"$n\" height=\"1\" fill=\"$color\"/>\n";
         }
+
+        $svg .= '</svg>';
+
+        return $svg;
     }
-    $svgh .= '</svg>';
-    if (strlen($svgh) < strlen($svgv)) $svg = $svgh; else $svg = $svgv;
-    return $svg;
+
+
 }
-
-/**
- * Get an image from a URL or file path
- *
- * @param string $url   Url or path to local file
- * @return GDImageIdentifier
- */
-function loadImage( $url ) {
-    // Handle URLS
-    if( filter_var($url, FILTER_VALIDATE_URL) ){
-        $ch = curl_init();
-        $timeout = 0;
-        curl_setopt ($ch, CURLOPT_URL, $url);
-        curl_setopt ($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
-
-        // Getting binary data
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_BINARYTRANSFER, 1);
-
-        $image = curl_exec($ch);
-        curl_close($ch);
-        // output to browser
-
-        $img = @imagecreatefromstring($image);
-    }
-    // Handle local files
-    else if ( file_exists( $url ) ){
-        $img = @imagecreatefromstring( file_get_contents( $url ) );
-    }
-    else {
-        throw new \LogicException( 'Url is invalid.' );
-    }
-
-    return $img;
-}
-
-?>

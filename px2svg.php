@@ -17,13 +17,7 @@ if (count($argv) < 1) {
 
 $url = $argv[1];
 
-$img = loadImage($url);
-if (!!$img) {
-    header('Content-type: image/svg+xml');
-    echo generateSVG($img);
-}
-else {
-    echo "<a href=\"$url\">Bad image file</a>";
-}
+header('Content-type: image/svg+xml');
 
-?>
+$converter = new px2svg();
+echo $converter->loadImage($url)->generateSVG();
