@@ -50,7 +50,7 @@ class px2svg
 		$width = imagesx($this->image); // image width
 		$height = imagesy($this->image); // image height
 
-		$svgv = "<svg xmlns=\"http://www.w3.org/2000/svg\" shape-rendering=\"crispEdges\">";
+		$svgv = "";
 		for ($x = 0; $x < $width; $x++) {
 			for ($y = 0; $y < $height; $y = $y + $number_of_consecutive_pixels) {
 				$color_at_position = imagecolorat($this->image, $x, $y);
@@ -75,10 +75,9 @@ class px2svg
 			}
 		}
 
-		$svgv .= '</svg>';
 
 		$number_of_consecutive_pixels = 1; //reset number of consecutive pixels
-		$svgh = "<svg xmlns=\"http://www.w3.org/2000/svg\" shape-rendering=\"crispEdges\">";
+		$svgh = "";
 		for ($y = 0; $y < $height; $y++) {
 			for ($x = 0; $x < $width; $x = $x + $number_of_consecutive_pixels) {
 				$color_at_position = imagecolorat($this->image, $x, $y);
@@ -102,11 +101,10 @@ class px2svg
 				$svgh .= "<rect x=\"$x\" y=\"$y\" width=\"$number_of_consecutive_pixels\" height=\"1\" fill=\"$color\"/>\n";
 			}
 		}
-		$svgh .= '</svg>';
 
 		if (strlen($svgh) < strlen($svgv)) $svg = $svgh; else $svg = $svgv;
 
-		return $svg;
+		return "<svg xmlns=\"http://www.w3.org/2000/svg\" shape-rendering=\"crispEdges\">" . $svg . "</svg>";
 	}
 
 
