@@ -23,6 +23,6 @@ This all originally started as a one-off experiment and a bit of a jape.  You ca
 
 [Amelia Bellamy-Royds](https://github.com/AmeliaBR/), sometime SVG gal, added the check for runs of constant color and alpha transparency support.
 
-[Robin Cafolla](https://github.com/robincafolla) made the script command-line usable and encapsulated for use in other code bases.
+[Robin Cafolla](https://github.com/robincafolla) made the script command-line usable and encapsulated for use in other code bases, and added posterization.
 
 [Neal Brooks](https://github.com/nealio82) thoroughly refactored the code and removed curl dependency.
