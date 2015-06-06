@@ -1,0 +1,71 @@
+px2svg                                                                                                  Scripting Language                                                                                                 PHP(1)
+
+NAME
+        px2svg.php - Convert raster images to SVG in a slightly silly way.
+
+SYNOPSIS
+        $ php px2svg.php [options] image
+
+        $ php px2svg.php [options] url
+
+DESCRIPTION
+        Turning raster images into SVG files, one pixel at a time. Yes, really.
+
+        
+        What?
+
+        The PHP accepts a raster image (GIF, PNG, JPEG, that sort of thing) and creates an SVG image that recreates the raster image.
+        It does this by drawing filled rectangles to recreate the pixels in the image. In many cases, this is literally a 1-by-1 rectangle,
+        but it will check for runs of similar color (similar to GIF compression) and one rectangle per run. It checks both horizontal and
+        vertical runs to see which approach is more efficient, and returns the better option.
+
+        The script requires GD.
+
+
+        Why?
+
+        There are situations where people want to take small bitmaps—think primary-color buttons or badges—and make them scalable while
+        still preserving their 8-bit appearance. See, for example, Joe Crawford’s post about upscaling a minitag. For those cases, this
+        script will enable a quick conversion to SVG with at least some minimal attempts at optimization.
+
+        This all originally started as a one-off experiment and a bit of a jape. You can see the original at flaming-shame, if you fancy a laugh.
+
+OPTIONS
+        -h              This help
+        --threshold=N   Default 0. Set the color threshold to N. Color threshold determines whether similar colours are
+                        treated as the same color when creating SVG vectors.
+
+FILES
+        px2svg.php      The commandline script to run.
+
+        converter.php   Standalone library to use in other software.
+
+        LICENCE         The licence for this software.
+
+        README.md       More detailed readme
+
+        help.txt        This help file
+
+AUTHORS
+        Eric Meyer, sometime CSS guy.
+
+        Amelia Bellamy-Royds, sometime SVG gal, added the check for runs of constant color and alpha transparency support.
+
+        Robin Cafolla made the script command-line usable and encapsulated for use in other code bases.
+
+        Neal Brooks thoroughly refactored the code and removed curl dependency.
+
+COPYRIGHT
+        Copyright (c) 2015, Eric A. Meyer <http://meyerweb.com/>
+
+        Permission to use, copy, modify, and/or distribute this software for any
+        purpose with or without fee is hereby granted, provided that the above
+        copyright notice and this permission notice appear in all copies.
+
+        THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+        WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+        MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+        ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+        WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+        ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+        OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
