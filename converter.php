@@ -71,7 +71,7 @@ class px2svg
 					$color .= "\" fill-opacity=\"$alpha";
 				}
 
-				$svgv .= "<rect width=\"1\" x=\"$x\" height=\"$number_of_consecutive_pixels\" y=\"$y\" fill=\"$color\"/>\n";
+				$svgv .= "<rect x=\"$x\" y=\"$y\" width=\"1\" height=\"$number_of_consecutive_pixels\" fill=\"$color\"/>\n";
 			}
 		}
 
@@ -104,7 +104,7 @@ class px2svg
 
 		if (strlen($svgh) < strlen($svgv)) $svg = $svgh; else $svg = $svgv;
 
-		return "<svg xmlns=\"http://www.w3.org/2000/svg\" shape-rendering=\"crispEdges\">" . $svg . "</svg>";
+		return "<svg xmlns=\"http://www.w3.org/2000/svg\" shape-rendering=\"crispEdges\">\n" . $svg . "</svg>";
 	}
 
 
