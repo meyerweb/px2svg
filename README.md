@@ -16,7 +16,6 @@ There are situations where people want to take small bitmaps—think primary-col
 
 This all originally started as a one-off experiment and a bit of a jape.  You can see the original at [flaming-shame](https://github.com/meyerweb/flaming-shame), if you fancy a laugh.
 
-
 ## Who?
 
 [Eric Meyer](http://meyerweb.com/), sometime CSS guy.
