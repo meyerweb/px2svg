@@ -25,3 +25,65 @@ This all originally started as a one-off experiment and a bit of a jape.  You ca
 [Robin Cafolla](https://github.com/robincafolla) made the script command-line usable and encapsulated for use in other code bases, and added posterization.
 
 [Neal Brooks](https://github.com/nealio82) thoroughly refactored the code and removed curl dependency.
+
+## Documentation
+
+### Installation
+
+Using any PSR-4 compatible autoloader.
+
+### Using the library
+
+Converting a Image into a SVG and directly output the corresponding SVG
+
+```php
+
+use Px2svg\Converter;
+
+$converter = new Converter();
+$converter->loadImage('/path/to/my/image.gif');
+$converter->setThreshold(80);
+header('Content-Type: text/xml');
+$res = $converter->generateSVG();
+```
+
+Converting a Image into a SVG and saving the SVG to a file
+
+```php
+
+use Px2svg\Converter;
+
+$converter = new Converter();
+$converter->loadImage('/path/to/my/image.gif');
+$converter->setThreshold(80);
+$res = $converter->saveSVG('/path/to/the/save.svg');
+```
+
+If you need to further manipulate the SVG then you better use `Converter::toXML()` . This method will return a PHP `DOMDocument` object.
+
+```php
+
+use Px2svg\Converter;
+
+$converter = new Converter();
+$converter->loadImage('/path/to/my/image.gif');
+$converter->setThreshold(80);
+$res = $converter->toXML();
+//$res is a DOMDocument object
+```
+
+### Using the command line tool
+
+```
+$ php app/console --threshold=80 --output="/path/to/the/save.svg" '/path/to/my/image.gif'
+```
+
+The file `/path/to/my/image.gif` will be converted to SVG and save to `/path/to/the/save.svg`. It will use the threshold value to determines whether similar colors are treated as the same color when creating the SVG vectors.
+
+If an error occurs you will be notice. You can of course use the help documentation by calling
+
+```
+$ php app/console --help
+```
+
+Happy coding!
