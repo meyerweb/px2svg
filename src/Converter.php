@@ -58,7 +58,7 @@ class Converter
      *
      * @return float Current threshold value
      */
-    public function getThreshold($threshold)
+    public function getThreshold()
     {
         return $this->threshold;
     }
@@ -70,6 +70,11 @@ class Converter
      */
     public function setThreshold($threshold)
     {
+        if ($threshold <= 0 || $threshold > 255) {
+            throw new InvalidArgumentException(
+                'the submitted threshold is invalid, value must be between > 0 and < 255'
+            );
+        }
         $this->threshold = $threshold;
 
         return $this;
@@ -96,12 +101,12 @@ class Converter
         return $this;
     }
 
-    public function getPath()
+    public function getCurrentImagePath()
     {
         return $this->path;
     }
 
-    public function __close()
+    public function __destruct()
     {
         if (! is_null($this->image)) {
             imagedestroy($this->image);
@@ -252,7 +257,7 @@ class Converter
                 while (($x + $number_of_consecutive_pixels < $this->width) &&
                     ($color_at_position == imagecolorat($this->image, ($x + $number_of_consecutive_pixels), $y))
                 ) {
-                    $number_of_consecutive_pixels++;
+                    ++$number_of_consecutive_pixels;
                 }
 
                 $rgb   = imagecolorsforindex($this->image, $color_at_position);
