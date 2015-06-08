@@ -1,53 +1,20 @@
 #!/usr/bin/env php
 <?php
 
-use Aura\Cli\CliFactory;
-use Aura\Cli\Status;
 use Px2svg\Converter;
 
 $path = dirname(__DIR__);
 
 require $path.'/vendor/autoload.php';
 
-$cli_factory = new CliFactory();
-$context = $cli_factory->newContext($GLOBALS);
-$stdio = $cli_factory->newStdio();
-
-$options = [
-    'help,h',     //help argument can be --help or -h
-    'threshold:', //threshold argument
-    'o,output:',  //where to save the file
-];
-$getopt = $context->getopt($options);
-
-if ($getopt->get('--help', false)) {
-    readfile('help.txt');
-    die(Status::SUCCESS);
-}
-
-$file = $getopt->get(1);
-if (is_null($file)) {
-    $stdio->errln("<<redbg white bold>>Missing the file argument<<reset>>");
-    die(Status::USAGE);
-}
-
-$output = $getopt->get('--output', false);
-if (! empty($output) && ! is_writable(dirname($output))) {
-    $stdio->errln(sprintf("<<redbg white bold>>The output path `%s` is not accessible<<reset>>", $output));
-    die(Status::USAGE);
-}
-
-$threshold = $getopt->get('--threshold', 0);
 try {
-    $converter = new Converter();
-    $converter->setThreshold($threshold)->loadImage($file);
-    if (! empty($output) && $converter->saveSVG($output)) {
-        $stdio->outln(sprintf("<<greenbg white bold>>The SVG file `%s` was sucessfully saved<<reset>>", $path));
-        die(Status::SUCCESS);
+    if (count($argv) < 1) {
+        throw new InvalidArgumentException('Too few arguments passed to converter');
     }
     header('Content-Type: image/svg+xml');
-    echo $converter->generateSVG();
+    echo (new Converter())->loadImage($argv[1])->generateSVG();
 } catch (Exception $e) {
-    $stdio->errln("<<redbg white bold>>".$e->getMessage()."<<reset>>");
-    die(Status::USAGE);
+    echo $e->getMessage();
+    readfile('help.txt');
+    die(1);
 }

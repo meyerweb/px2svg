@@ -71,19 +71,3 @@ $converter->setThreshold(80);
 $res = $converter->toXML();
 //$res is a DOMDocument object
 ```
-
-### Using the command line tool
-
-```
-$ php app/console --threshold=80 --output="/path/to/the/save.svg" '/path/to/my/image.gif'
-```
-
-The file `/path/to/my/image.gif` will be converted to SVG and save to `/path/to/the/save.svg`. It will use the threshold value to determines whether similar colors are treated as the same color when creating the SVG vectors.
-
-If an error occurs you will be notice. You can of course use the help documentation by calling
-
-```
-$ php app/console --help
-```
-
-Happy coding!

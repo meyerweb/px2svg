@@ -1,8 +1,7 @@
 {
     "require": {
         "php" : ">=5.4.0",
-        "ext-gd" : "*",
-        "aura/cli": "~2.0"
+        "ext-gd" : "*"
     },
     "autoload": {
         "psr-4": {
