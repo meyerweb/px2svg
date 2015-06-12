@@ -197,36 +197,62 @@ class Converter
     {
         $svg = $this->getTemplateSvg();
         for ($y = 0; $y < $this->height; $y++) {
+            $number_of_consecutive_pixels = 1;
             for ($x = 0; $x < $this->width; $x = $x + $number_of_consecutive_pixels) {
-                $color_at_position = imagecolorat($this->image, $x, $y);
-                $number_of_consecutive_pixels = 1;
-                while (($x + $number_of_consecutive_pixels < $this->width) &&
-                    ($color_at_position == imagecolorat($this->image, ($x + $number_of_consecutive_pixels), $y))
-                ) {
-                    ++$number_of_consecutive_pixels;
-                }
-
-                $rgb   = imagecolorsforindex($this->image, $color_at_position);
-                $color = "rgb({$rgb['red']},{$rgb['green']},{$rgb['blue']})";
-                $alpha = 0;
-                if ($rgb["alpha"] && ($rgb["alpha"] < 128 )) {
-                    $alpha = (128 - $rgb["alpha"]) / 128;
-                }
-
-                $rect = $svg->createElement('rect');
-                $rect->setAttribute("x", $x);
-                $rect->setAttribute("y", $y);
-                $rect->setAttribute("width", $number_of_consecutive_pixels);
-                $rect->setAttribute("height", 1);
-                $rect->setAttribute("fill", $color);
-                if ($alpha > 0) {
-                    $rect->setAttribute("fill-opacity", $alpha);
-                }
-                $svg->documentElement->appendChild($rect);
+                $number_of_consecutive_pixels = $this->createHorizontalRectangle($svg, $x, $y);
             }
         }
 
         return $svg;
+    }
+
+    /**
+     * Create a Rect Element for Horizontal SVG
+     *
+     * @param DOMDocument $svg
+     * @param int         $x    X coordonate
+     * @param int         $y    Y coordonate
+     *
+     * @return int the number of consecutive pixels
+     */
+    protected function createHorizontalRectangle(DOMDocument $svg, $x, $y)
+    {
+        $color_at_position = imagecolorat($this->image, $x, $y);
+        $width = 1;
+        while (($x + $width < $this->width) && ($color_at_position == imagecolorat($this->image, ($x + $width), $y))) {
+            ++$width;
+        }
+
+        $rgba = imagecolorsforindex($this->image, $color_at_position);
+        $this->createRectElement($svg, $rgba, $x, $y, $width);
+
+        return $width;
+    }
+
+    /**
+     * Create a SVG rect Element
+     *
+     * @param DOMDocument $svg
+     * @param array       $rgba  Color array in form [red: int, green: int, blue: int, alpha: int]
+     * @param int         $x     X coordonate
+     * @param int         $y     Y coordonate
+     * @param int         $width element width
+     */
+    protected function createRectElement(DOMDocument $svg, array $rgba, $x, $y, $width)
+    {
+        $rect = $svg->createElement('rect');
+        $rect->setAttribute("x", $x);
+        $rect->setAttribute("y", $y);
+        $rect->setAttribute("width", $width);
+        $rect->setAttribute("height", 1);
+        $rect->setAttribute("fill", "rgb({$rgba['red']},{$rgba['green']},{$rgba['blue']})");
+        $alpha = filter_var($rgba["alpha"], FILTER_VALIDATE_INT, [
+            'options' => ['min_range' => 0, 'max_range' => 128, 'default' => 0]
+        ]);
+        if ($alpha > 0) {
+            $rect->setAttribute("fill-opacity", (128 - $alpha) / 128);
+        }
+        $svg->documentElement->appendChild($rect);
     }
 
     /**
@@ -236,10 +262,11 @@ class Converter
      */
     protected function getTemplateSvg()
     {
-        $dom = DOMImplementation::createDocument(
+        $imp = new DOMImplementation();
+        $dom = $imp->createDocument(
             null,
             'svg',
-            DOMImplementation::createDocumentType(
+            $imp->createDocumentType(
                 'svg',
                 '-//W3C//DTD SVG 1.1//EN',
                 'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'
@@ -262,44 +289,42 @@ class Converter
     {
         $svg = $this->getTemplateSvg();
         for ($x = 0; $x < $this->width; ++$x) {
+            $number_of_consecutive_pixels = 1;
             for ($y = 0; $y < $this->height; $y = $y + $number_of_consecutive_pixels) {
-                $color_at_position = imagecolorsforindex($this->image, imagecolorat($this->image, $x, $y));
-                $number_of_consecutive_pixels = 1;
-                while (($y + $number_of_consecutive_pixels) < $this->height) {
-                    $next_color = imagecolorsforindex(
-                        $this->image,
-                        imagecolorat($this->image, $x, ($y + $number_of_consecutive_pixels))
-                    );
-
-                    if (! $this->checkThreshold($color_at_position, $next_color)) {
-                        break;
-                    }
-
-                    ++$number_of_consecutive_pixels;
-                }
-
-                $rgb = $color_at_position;
-                $color = "rgb({$rgb['red']},{$rgb['green']},{$rgb['blue']})";
-
-                $alpha = 0;
-                if ($rgb["alpha"] && ($rgb["alpha"] < 128)) {
-                    $alpha = (128 - $rgb["alpha"]) / 128;
-                }
-
-                $rect = $svg->createElement('rect');
-                $rect->setAttribute("x", $x);
-                $rect->setAttribute("y", $y);
-                $rect->setAttribute("width", 1);
-                $rect->setAttribute("height", $number_of_consecutive_pixels);
-                $rect->setAttribute("fill", $color);
-                if ($alpha > 0) {
-                    $rect->setAttribute("fill-opacity", $alpha);
-                }
-                $svg->documentElement->appendChild($rect);
+                $number_of_consecutive_pixels = $this->createVerticalRectangle($svg, $x, $y);
             }
         }
 
         return $svg;
+    }
+
+    /**
+     * Create a Rect Element for Vertical SVG
+     *
+     * @param DOMDocument $svg
+     * @param int         $x    X coordonate
+     * @param int         $y    Y coordonate
+     *
+     * @return int      the number of consecutive pixels
+     */
+    protected function createVerticalRectangle(DOMDocument $svg, $x, $y)
+    {
+        $rgba  = imagecolorsforindex($this->image, imagecolorat($this->image, $x, $y));
+        $width = 1;
+        while (($y + $width) < $this->height) {
+            $next_color = imagecolorsforindex(
+                $this->image,
+                imagecolorat($this->image, $x, ($y + $width))
+            );
+            if (! $this->checkThreshold($rgba, $next_color)) {
+                break;
+            }
+            ++$width;
+        }
+
+        $this->createRectElement($svg, $rgba, $x, $y, $width);
+
+        return $width;
     }
 
     /**
