@@ -40,6 +40,14 @@ class ConverterTest extends PHPUnit_Framework_TestCase
         $this->converter->loadImage('/fsdfqds/fsd');
     }
 
+    /**
+     * @expectedException PHPUnit_Framework_Error_Warning
+     */
+    public function testConvertingWrongImage()
+    {
+        $this->converter->loadImage(__FILE__)->toXML();
+    }
+
     public function testThreshold()
     {
         $expected = 28.9;

@@ -3,6 +3,7 @@
 namespace Px2svg;
 
 use DOMDocument;
+use DOMImplementation;
 use InvalidArgumentException;
 
 /**
@@ -19,28 +20,28 @@ class Converter
      *
      * @var string
      */
-    private $path;
+    protected $path;
 
     /**
      * GDImageIdentifier
      *
      * @var resource
      */
-    private $image;
+    protected $image;
 
     /**
      * Image pixel width
      *
      * @var int
      */
-    private $width;
+    protected $width;
 
     /**
      * Image pixel $this->height
      *
      * @var int
      */
-    private $height;
+    protected $height;
 
     /**
      * Similarity between colours.
@@ -51,10 +52,31 @@ class Converter
      *
      * @var float $threshold
      */
-    private $threshold = 0;
+    protected $threshold = 0;
 
     /**
-     * Get threshold
+     * Destruct the current instance
+     */
+    public function __destruct()
+    {
+        $this->flushImageSettings();
+    }
+
+    /**
+     * Remove image settings
+     */
+    protected function flushImageSettings()
+    {
+        if (! is_null($this->image)) {
+            imagedestroy($this->image);
+            $this->image  = null;
+            $this->width  = 0;
+            $this->height = 0;
+        }
+    }
+
+    /**
+     * Get threshold value
      *
      * @return float Current threshold value
      */
@@ -64,9 +86,9 @@ class Converter
     }
 
     /**
-     * Set threshold
+     * Set threshold value
      *
-     * @param float $threshold  New threshold value
+     * @param float $threshold
      */
     public function setThreshold($threshold)
     {
@@ -83,7 +105,7 @@ class Converter
     /**
      * Get an image from a URL or file path
      *
-     * @param string $url Url or path to local file
+     * @param string $path url or path to a file
      *
      * @return static
      */
@@ -93,64 +115,36 @@ class Converter
             throw new InvalidArgumentException(sprintf("Supplied URL / path is invalid : '%s'", $path));
         }
 
-        $this->path   = $path;
-        $this->image  = imagecreatefromstring(file_get_contents($path));
-        $this->width  = imagesx($this->image);
-        $this->height = imagesy($this->image);
+        $this->path = $path;
 
         return $this;
     }
 
+    /**
+     * Return the current path
+     *
+     * @return string
+     */
     public function getCurrentImagePath()
     {
         return $this->path;
     }
 
-    public function __destruct()
-    {
-        if (! is_null($this->image)) {
-            imagedestroy($this->image);
-        }
-    }
-
     /**
      * Generates svg from raster
      *
-     * @param string $this->image Raster image to convert to svg
-     *
-     * @return string SVG xml
+     * @return string
      */
     public function generateSVG()
     {
         $svg = $this->toXML();
 
-        return $svg->saveXML($svg->getElementsByTagName('svg')->item(0));
-    }
-
-    /**
-     * Generates svg from raster Horizontally
-     *
-     * @return DOMDocument
-     */
-    public function toXML()
-    {
-        if (! $this->image) {
-            throw new InvalidArgumentException('You must use `Conveter::loadImage` first');
-        }
-        $svgh = $this->generateHorizontalSVG();
-        $svg  = $this->generateVerticalSVG();
-        if ($svgh->getElementsByTagName('rect')->length < $svg->getElementsByTagName('rect')->length) {
-            $svg =  $svgh;
-        }
-        $svg->formatOutput = true;
-
-        return $svg;
+        return $svg->saveXML($svg->documentElement);
     }
 
     /**
      * Generates svg from raster and save to a given file
      *
-     * @param string $img  Raster image to convert to svg
      * @param string $path Path where to save the generated SVG
      *
      * @return int
@@ -161,17 +155,112 @@ class Converter
     }
 
     /**
+     * Generates svg from raster Horizontally
+     *
+     * @return DOMDocument
+     */
+    public function toXML()
+    {
+        $this->setImageSettings();
+        $svgh = $this->generateHorizontalSVG();
+        $svg  = $this->generateVerticalSVG();
+        if ($svgh->getElementsByTagName('rect')->length < $svg->getElementsByTagName('rect')->length) {
+            $svg = $svgh;
+        }
+        $this->flushImageSettings();
+
+        return $svg;
+    }
+
+    /**
+     * initialize Image settings
+     *
+     * @throws InvalidArgumentException if the image is not yet loaded
+     */
+    protected function setImageSettings()
+    {
+        $this->flushImageSettings();
+        if (empty($this->path)) {
+            throw new InvalidArgumentException('You must use the `loadImage` method first');
+        }
+        $this->image  = imagecreatefromstring(file_get_contents($this->path));
+        $this->width  = imagesx($this->image);
+        $this->height = imagesy($this->image);
+    }
+
+    /**
+     * Generates svg from raster Horizontally
+     *
+     * @return DOMDocument
+     */
+    protected function generateHorizontalSVG()
+    {
+        $svg = $this->getTemplateSvg();
+        for ($y = 0; $y < $this->height; $y++) {
+            for ($x = 0; $x < $this->width; $x = $x + $number_of_consecutive_pixels) {
+                $color_at_position = imagecolorat($this->image, $x, $y);
+                $number_of_consecutive_pixels = 1;
+                while (($x + $number_of_consecutive_pixels < $this->width) &&
+                    ($color_at_position == imagecolorat($this->image, ($x + $number_of_consecutive_pixels), $y))
+                ) {
+                    ++$number_of_consecutive_pixels;
+                }
+
+                $rgb   = imagecolorsforindex($this->image, $color_at_position);
+                $color = "rgb({$rgb['red']},{$rgb['green']},{$rgb['blue']})";
+                $alpha = 0;
+                if ($rgb["alpha"] && ($rgb["alpha"] < 128 )) {
+                    $alpha = (128 - $rgb["alpha"]) / 128;
+                }
+
+                $rect = $svg->createElement('rect');
+                $rect->setAttribute("x", $x);
+                $rect->setAttribute("y", $y);
+                $rect->setAttribute("width", $number_of_consecutive_pixels);
+                $rect->setAttribute("height", 1);
+                $rect->setAttribute("fill", $color);
+                if ($alpha > 0) {
+                    $rect->setAttribute("fill-opacity", $alpha);
+                }
+                $svg->documentElement->appendChild($rect);
+            }
+        }
+
+        return $svg;
+    }
+
+    /**
+     * Create a template SVG file
+     *
+     * @return DOMDocument
+     */
+    protected function getTemplateSvg()
+    {
+        $dom = DOMImplementation::createDocument(
+            null,
+            'svg',
+            DOMImplementation::createDocumentType(
+                'svg',
+                '-//W3C//DTD SVG 1.1//EN',
+                'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'
+            )
+        );
+        $dom->encoding     = 'UTF-8';
+        $dom->formatOutput = true;
+        $dom->documentElement->setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        $dom->documentElement->setAttribute('shape-rendering', 'crispEdges');
+
+        return $dom;
+    }
+
+    /**
      * Generates svg from raster Vertically
      *
      * @return DOMDocument
      */
-    private function generateVerticalSVG()
+    protected function generateVerticalSVG()
     {
-        $dom = new DOMDocument();
-        $root = $dom->createElement('svg');
-        $root->setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-        $root->setAttribute('shape-rendering', 'crispEdges');
-
+        $svg = $this->getTemplateSvg();
         for ($x = 0; $x < $this->width; ++$x) {
             for ($y = 0; $y < $this->height; $y = $y + $number_of_consecutive_pixels) {
                 $color_at_position = imagecolorsforindex($this->image, imagecolorat($this->image, $x, $y));
@@ -197,7 +286,7 @@ class Converter
                     $alpha = (128 - $rgb["alpha"]) / 128;
                 }
 
-                $rect = $dom->createElement('rect');
+                $rect = $svg->createElement('rect');
                 $rect->setAttribute("x", $x);
                 $rect->setAttribute("y", $y);
                 $rect->setAttribute("width", 1);
@@ -206,12 +295,11 @@ class Converter
                 if ($alpha > 0) {
                     $rect->setAttribute("fill-opacity", $alpha);
                 }
-                $root->appendChild($rect);
+                $svg->documentElement->appendChild($rect);
             }
         }
-        $dom->appendChild($root);
 
-        return $dom;
+        return $svg;
     }
 
     /**
@@ -225,62 +313,14 @@ class Converter
      * @return bool             True if the colours are within the tolerance,
      *                          false if they are outside the tolerance
      */
-    public function checkThreshold(array $colorA, array $colorB, $threshold = null)
+    protected function checkThreshold(array $colorA, array $colorB, $threshold = null)
     {
-        $threshold =  $threshold ?: $this->threshold;
+        $threshold = $threshold ?: $this->threshold;
 
-        $distance = sqrt(
+        return $threshold > sqrt(
             pow($colorB['red'] - $colorA['red'], 2) +
             pow($colorB['green'] - $colorA['green'], 2) +
             pow($colorB['blue'] - $colorA['blue'], 2)
         );
-
-        return $distance < $threshold;
-    }
-
-    /**
-     * Generates svg from raster Horizontally
-     *
-     * @return DOMDocument
-     */
-    private function generateHorizontalSVG()
-    {
-        $dom = new DOMDocument();
-        $root = $dom->createElement('svg');
-        $root->setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-        $root->setAttribute('shape-rendering', 'crispEdges');
-
-        for ($y = 0; $y < $this->height; $y++) {
-            for ($x = 0; $x < $this->width; $x = $x + $number_of_consecutive_pixels) {
-                $color_at_position = imagecolorat($this->image, $x, $y);
-                $number_of_consecutive_pixels = 1;
-                while (($x + $number_of_consecutive_pixels < $this->width) &&
-                    ($color_at_position == imagecolorat($this->image, ($x + $number_of_consecutive_pixels), $y))
-                ) {
-                    ++$number_of_consecutive_pixels;
-                }
-
-                $rgb   = imagecolorsforindex($this->image, $color_at_position);
-                $color = "rgb({$rgb['red']},{$rgb['green']},{$rgb['blue']})";
-                $alpha = 0;
-                if ($rgb["alpha"] && ($rgb["alpha"] < 128 )) {
-                    $alpha = (128 - $rgb["alpha"]) / 128;
-                }
-
-                $rect = $dom->createElement('rect');
-                $rect->setAttribute("x", $x);
-                $rect->setAttribute("y", $y);
-                $rect->setAttribute("width", $number_of_consecutive_pixels);
-                $rect->setAttribute("height", 1);
-                $rect->setAttribute("fill", $color);
-                if ($alpha > 0) {
-                    $rect->setAttribute("fill-opacity", $alpha);
-                }
-                $root->appendChild($rect);
-            }
-        }
-        $dom->appendChild($root);
-
-        return $dom;
     }
 }
