@@ -10,8 +10,7 @@ use InvalidArgumentException;
  * Flaming Shame Raster to SVG converter
  *
  * @author  Eric Meyer, Amelia Bellamy-Royds, Robin Cafolla, Neal Brooks
- * @arg  string url   Takes a single string url or path to local image to
- *                        convert from raster to SVG.
+ *
  */
 class Converter
 {
@@ -80,6 +79,22 @@ class Converter
     }
 
     /**
+     * initialize Image settings
+     *
+     * @throws InvalidArgumentException if the image is not yet loaded
+     */
+    protected function setImageSettings()
+    {
+        $this->flushImageSettings();
+        if (empty($this->path)) {
+            throw new InvalidArgumentException('You must use the `loadImage` method first');
+        }
+        $this->image  = imagecreatefromstring(file_get_contents($this->path));
+        $this->width  = imagesx($this->image);
+        $this->height = imagesy($this->image);
+    }
+
+    /**
      * Get threshold value
      *
      * @return int Current threshold value
@@ -130,7 +145,7 @@ class Converter
      *
      * @return string
      */
-    public function getCurrentImagePath()
+    public function getLoadedImagePath()
     {
         return $this->path;
     }
@@ -160,15 +175,15 @@ class Converter
     }
 
     /**
-     * Generates svg from raster Horizontally
+     * Generates svg from raster
      *
      * @return DOMDocument
      */
     public function toXML()
     {
         $this->setImageSettings();
-        $svgh = $this->generateHorizontalSVG();
-        $svg  = $this->generateVerticalSVG();
+        $svgh = $this->generateSvgFromRaster(self::DIRECTION_HORIZONTAL);
+        $svg  = $this->generateSvgFromRaster(self::DIRECTION_VERTICAL);
         if ($svgh->getElementsByTagName('rect')->length < $svg->getElementsByTagName('rect')->length) {
             $svg = $svgh;
         }
@@ -178,51 +193,20 @@ class Converter
     }
 
     /**
-     * initialize Image settings
-     *
-     * @throws InvalidArgumentException if the image is not yet loaded
-     */
-    protected function setImageSettings()
-    {
-        $this->flushImageSettings();
-        if (empty($this->path)) {
-            throw new InvalidArgumentException('You must use the `loadImage` method first');
-        }
-        $this->image  = imagecreatefromstring(file_get_contents($this->path));
-        $this->width  = imagesx($this->image);
-        $this->height = imagesy($this->image);
-    }
-
-    /**
-     * Generates svg from raster Horizontally
+     * Create a SVG document from raster depending on
+     * its direction HORIZONTALLY OR VERTICALLY
+     *  
+     * @param int $direction horizontal OR vertical
      *
      * @return DOMDocument
      */
-    protected function generateHorizontalSVG()
+    protected function generateSvgFromRaster($direction)
     {
-        $svg = $this->getTemplateSvg();
-        for ($y = 0; $y < $this->height; ++$y) {
-            $number_of_consecutive_pixels = 1;
-            for ($x = 0; $x < $this->width; $x = $x + $number_of_consecutive_pixels) {
-                $number_of_consecutive_pixels = $this->createHorizontalRectangle($svg, $x, $y);
-            }
-        }
-
-        return $svg;
-    }
-
-    /**
-     * Generates svg from raster Vertically
-     *
-     * @return DOMDocument
-     */
-    protected function generateVerticalSVG()
-    {
-        $svg = $this->getTemplateSvg();
+        $svg = $this->createSvgDocument();
         for ($x = 0; $x < $this->width; ++$x) {
             $number_of_consecutive_pixels = 1;
             for ($y = 0; $y < $this->height; $y = $y + $number_of_consecutive_pixels) {
-                $number_of_consecutive_pixels = $this->createVerticalRectangle($svg, $x, $y);
+                $number_of_consecutive_pixels = $this->createLine($svg, $x, $y, $direction);
             }
         }
 
@@ -234,7 +218,7 @@ class Converter
      *
      * @return DOMDocument
      */
-    protected function getTemplateSvg()
+    protected function createSvgDocument()
     {
         $imp = new DOMImplementation();
         $dom = $imp->createDocument(
@@ -252,6 +236,66 @@ class Converter
         $dom->documentElement->setAttribute('shape-rendering', 'crispEdges');
 
         return $dom;
+    }
+
+    /**
+     * Create a line SVG
+     *
+     * @param DOMDocument $svg
+     * @param int         $x         X coordonate
+     * @param int         $y         Y coordonate
+     * @param int         $direction horizontal OR vertical
+     *
+     * @return int      the number of consecutive pixels
+     */
+    protected function createLine(DOMDocument $svg, $x, $y, $direction)
+    {
+        $rgba  = $this->getPixelColors($x, $y);
+        $delta = 1;
+        while ($this->isSimilarPixel($rgba, $x, $y, $delta, $direction)) {
+            ++$delta;
+        }
+        $this->createRectElement($svg, $rgba, $x, $y, $delta, $direction);
+
+        return $delta;
+    }
+
+    /**
+     * Create a Rect Element for SVG
+     *
+     * @param int $x X coordonate
+     * @param int $y Y coordonate
+     *
+     * @return array Color array in form [red: int, green: int, blue: int, alpha: int]
+     */
+    protected function getPixelColors($x, y)
+    {
+        return imagecolorsforindex($this->image, imagecolorat($this->image, $x, $y));
+    }
+
+    /**
+     * Return whether the Pixel are similar in color
+     * depending on the direction
+     *
+     * @param array $rgba      Color array in form [red: int, green: int, blue: int, alpha: int]
+     * @param int   $x         X coordonate
+     * @param int   $y         Y coordonate
+     * @param int   $delta     difference dimension
+     * @param int   $direction horizontal OR vertical
+     *
+     * @return bool
+     */
+    protected function isSimilarPixel($rgba, $x, $y, $delta, $direction)
+    {
+        if ($direction == self::DIRECTION_HORIZONTAL) {
+            $res = $x + $delta;
+
+            return $res < $this->width && $this->checkThreshold($rgba, $this->getPixelColors($res, $y));
+        }
+
+        $res = $y + $delta;
+
+        return $res < $this->height && $this->checkThreshold($rgba, $this->getPixelColors($x, $res));
     }
 
     /**
@@ -286,66 +330,14 @@ class Converter
     }
 
     /**
-     * Create a Rect Element for Vertical SVG
-     *
-     * @param DOMDocument $svg
-     * @param int         $x    X coordonate
-     * @param int         $y    Y coordonate
-     *
-     * @return int      the number of consecutive pixels
-     */
-    protected function createVerticalRectangle(DOMDocument $svg, $x, $y)
-    {
-        $rgba   = imagecolorsforindex($this->image, imagecolorat($this->image, $x, $y));
-        $height = 1;
-        while (($y + $height) < $this->height
-            && $this->checkThreshold(
-                $rgba,
-                imagecolorsforindex($this->image, imagecolorat($this->image, $x, ($y + $height)))
-            )) {
-            ++$height;
-        }
-
-        $this->createRectElement($svg, $rgba, $x, $y, $height, self::DIRECTION_VERTICAL);
-
-        return $height;
-    }
-
-    /**
-     * Create a Rect Element for Horizontal SVG
-     *
-     * @param DOMDocument $svg
-     * @param int         $x    X coordonate
-     * @param int         $y    Y coordonate
-     *
-     * @return int the number of consecutive pixels
-     */
-    protected function createHorizontalRectangle(DOMDocument $svg, $x, $y)
-    {
-        $rgba  = imagecolorsforindex($this->image, imagecolorat($this->image, $x, $y));
-        $width = 1;
-        while (($x + $width) < $this->width
-            && $this->checkThreshold(
-                $rgba,
-                imagecolorsforindex($this->image, imagecolorat($this->image, ($x + $width), $y))
-            )) {
-            ++$width;
-        }
-
-        $this->createRectElement($svg, $rgba, $x, $y, $width, self::DIRECTION_HORIZONTAL);
-
-        return $width;
-    }
-
-    /**
      * Check if two colors are within the color tolerance as determined by
      * threshold.
      *
      * @param array $colorA Color array in form [ red: int, green: int, blue: int ]
      * @param array $colorB Color array in form [ red: int, green: int, blue: int ]
      *
-     * @return bool            True if the colours are within the tolerance,
-     *                         false if they are outside the tolerance
+     * @return bool true  if the colours are within the tolerance,
+     *              false if they are outside the tolerance
      */
     protected function checkThreshold(array $colorA, array $colorB)
     {
