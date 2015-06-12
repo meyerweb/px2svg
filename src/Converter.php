@@ -15,6 +15,10 @@ use InvalidArgumentException;
  */
 class Converter
 {
+    const DIRECTION_HORIZONTAL = 1;
+
+    const DIRECTION_VERTICAL = 2;
+
     /**
      * Image source path
      *
@@ -78,7 +82,7 @@ class Converter
     /**
      * Get threshold value
      *
-     * @return float Current threshold value
+     * @return int Current threshold value
      */
     public function getThreshold()
     {
@@ -88,13 +92,14 @@ class Converter
     /**
      * Set threshold value
      *
-     * @param float $threshold
+     * @param int $threshold
      */
     public function setThreshold($threshold)
     {
-        if ($threshold <= 0 || $threshold > 255) {
+        $threshold = filter_var($threshold, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0, 'max_range' => 255]]);
+        if ($threshold === false) {
             throw new InvalidArgumentException(
-                'the submitted threshold is invalid, value must be between > 0 and < 255'
+                'the submitted threshold is invalid, value must be a integer between > 0 and < 255'
             );
         }
         $this->threshold = $threshold;
@@ -196,7 +201,7 @@ class Converter
     protected function generateHorizontalSVG()
     {
         $svg = $this->getTemplateSvg();
-        for ($y = 0; $y < $this->height; $y++) {
+        for ($y = 0; $y < $this->height; ++$y) {
             $number_of_consecutive_pixels = 1;
             for ($x = 0; $x < $this->width; $x = $x + $number_of_consecutive_pixels) {
                 $number_of_consecutive_pixels = $this->createHorizontalRectangle($svg, $x, $y);
@@ -207,52 +212,21 @@ class Converter
     }
 
     /**
-     * Create a Rect Element for Horizontal SVG
+     * Generates svg from raster Vertically
      *
-     * @param DOMDocument $svg
-     * @param int         $x    X coordonate
-     * @param int         $y    Y coordonate
-     *
-     * @return int the number of consecutive pixels
+     * @return DOMDocument
      */
-    protected function createHorizontalRectangle(DOMDocument $svg, $x, $y)
+    protected function generateVerticalSVG()
     {
-        $color_at_position = imagecolorat($this->image, $x, $y);
-        $width = 1;
-        while (($x + $width < $this->width) && ($color_at_position == imagecolorat($this->image, ($x + $width), $y))) {
-            ++$width;
+        $svg = $this->getTemplateSvg();
+        for ($x = 0; $x < $this->width; ++$x) {
+            $number_of_consecutive_pixels = 1;
+            for ($y = 0; $y < $this->height; $y = $y + $number_of_consecutive_pixels) {
+                $number_of_consecutive_pixels = $this->createVerticalRectangle($svg, $x, $y);
+            }
         }
 
-        $rgba = imagecolorsforindex($this->image, $color_at_position);
-        $this->createRectElement($svg, $rgba, $x, $y, $width);
-
-        return $width;
-    }
-
-    /**
-     * Create a SVG rect Element
-     *
-     * @param DOMDocument $svg
-     * @param array       $rgba  Color array in form [red: int, green: int, blue: int, alpha: int]
-     * @param int         $x     X coordonate
-     * @param int         $y     Y coordonate
-     * @param int         $width element width
-     */
-    protected function createRectElement(DOMDocument $svg, array $rgba, $x, $y, $width)
-    {
-        $rect = $svg->createElement('rect');
-        $rect->setAttribute("x", $x);
-        $rect->setAttribute("y", $y);
-        $rect->setAttribute("width", $width);
-        $rect->setAttribute("height", 1);
-        $rect->setAttribute("fill", "rgb({$rgba['red']},{$rgba['green']},{$rgba['blue']})");
-        $alpha = filter_var($rgba["alpha"], FILTER_VALIDATE_INT, [
-            'options' => ['min_range' => 0, 'max_range' => 128, 'default' => 0]
-        ]);
-        if ($alpha > 0) {
-            $rect->setAttribute("fill-opacity", (128 - $alpha) / 128);
-        }
-        $svg->documentElement->appendChild($rect);
+        return $svg;
     }
 
     /**
@@ -281,21 +255,34 @@ class Converter
     }
 
     /**
-     * Generates svg from raster Vertically
+     * Create a SVG rect Element
      *
-     * @return DOMDocument
+     * @param DOMDocument $svg
+     * @param array       $rgba      Color array in form [red: int, green: int, blue: int, alpha: int]
+     * @param int         $x         X coordonate
+     * @param int         $y         Y coordonate
+     * @param int         $width     element width
+     * @param int         $direction horizontal OR vertical
      */
-    protected function generateVerticalSVG()
+    protected function createRectElement(DOMDocument $svg, array $rgba, $x, $y, $width, $direction)
     {
-        $svg = $this->getTemplateSvg();
-        for ($x = 0; $x < $this->width; ++$x) {
-            $number_of_consecutive_pixels = 1;
-            for ($y = 0; $y < $this->height; $y = $y + $number_of_consecutive_pixels) {
-                $number_of_consecutive_pixels = $this->createVerticalRectangle($svg, $x, $y);
-            }
+        $rectWidth  = $width;
+        $rectHeight = 1;
+        if ($direction == self::DIRECTION_VERTICAL) {
+            $rectWidth  = 1;
+            $rectHeight = $width;
         }
-
-        return $svg;
+        $rect = $svg->createElement('rect');
+        $rect->setAttribute("x", $x);
+        $rect->setAttribute("y", $y);
+        $rect->setAttribute("width", $rectWidth);
+        $rect->setAttribute("height", $rectHeight);
+        $rect->setAttribute("fill", "rgb({$rgba['red']},{$rgba['green']},{$rgba['blue']})");
+        $alpha = filter_var($rgba["alpha"], FILTER_VALIDATE_INT, ['options' => ['min_range' => 0, 'max_range' => 128]]);
+        if ($alpha > 0) {
+            $rect->setAttribute("fill-opacity", (128 - $alpha) / 128);
+        }
+        $svg->documentElement->appendChild($rect);
     }
 
     /**
@@ -309,20 +296,43 @@ class Converter
      */
     protected function createVerticalRectangle(DOMDocument $svg, $x, $y)
     {
+        $rgba   = imagecolorsforindex($this->image, imagecolorat($this->image, $x, $y));
+        $height = 1;
+        while (($y + $height) < $this->height
+            && $this->checkThreshold(
+                $rgba,
+                imagecolorsforindex($this->image, imagecolorat($this->image, $x, ($y + $height)))
+            )) {
+            ++$height;
+        }
+
+        $this->createRectElement($svg, $rgba, $x, $y, $height, self::DIRECTION_VERTICAL);
+
+        return $height;
+    }
+
+    /**
+     * Create a Rect Element for Horizontal SVG
+     *
+     * @param DOMDocument $svg
+     * @param int         $x    X coordonate
+     * @param int         $y    Y coordonate
+     *
+     * @return int the number of consecutive pixels
+     */
+    protected function createHorizontalRectangle(DOMDocument $svg, $x, $y)
+    {
         $rgba  = imagecolorsforindex($this->image, imagecolorat($this->image, $x, $y));
         $width = 1;
-        while (($y + $width) < $this->height) {
-            $next_color = imagecolorsforindex(
-                $this->image,
-                imagecolorat($this->image, $x, ($y + $width))
-            );
-            if (! $this->checkThreshold($rgba, $next_color)) {
-                break;
-            }
+        while (($x + $width) < $this->width
+            && $this->checkThreshold(
+                $rgba,
+                imagecolorsforindex($this->image, imagecolorat($this->image, ($x + $width), $y))
+            )) {
             ++$width;
         }
 
-        $this->createRectElement($svg, $rgba, $x, $y, $width);
+        $this->createRectElement($svg, $rgba, $x, $y, $width, self::DIRECTION_HORIZONTAL);
 
         return $width;
     }
@@ -331,18 +341,15 @@ class Converter
      * Check if two colors are within the color tolerance as determined by
      * threshold.
      *
-     * @param array $colorA     Color array in form [ red: int, green: int, blue: int ]
-     * @param array $colorB     Color array in form [ red: int, green: int, blue: int ]
-     * @param float $threshold  Optional. Tolerance to check within.
+     * @param array $colorA Color array in form [ red: int, green: int, blue: int ]
+     * @param array $colorB Color array in form [ red: int, green: int, blue: int ]
      *
-     * @return bool             True if the colours are within the tolerance,
-     *                          false if they are outside the tolerance
+     * @return bool            True if the colours are within the tolerance,
+     *                         false if they are outside the tolerance
      */
-    protected function checkThreshold(array $colorA, array $colorB, $threshold = null)
+    protected function checkThreshold(array $colorA, array $colorB)
     {
-        $threshold = $threshold ?: $this->threshold;
-
-        return $threshold > sqrt(
+        return $this->threshold > sqrt(
             pow($colorB['red'] - $colorA['red'], 2) +
             pow($colorB['green'] - $colorA['green'], 2) +
             pow($colorB['blue'] - $colorA['blue'], 2)

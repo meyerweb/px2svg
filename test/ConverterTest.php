@@ -50,7 +50,7 @@ class ConverterTest extends PHPUnit_Framework_TestCase
 
     public function testThreshold()
     {
-        $expected = 28.9;
+        $expected = 28;
         $this->assertSame(0, $this->converter->getThreshold());
         $this->converter->setThreshold($expected);
         $this->assertSame($expected, $this->converter->getThreshold());
@@ -70,6 +70,19 @@ class ConverterTest extends PHPUnit_Framework_TestCase
         $res = $this->converter->toXML();
         $this->assertInstanceOf('\DOMDocument', $res);
         $this->converter = null;
+    }
+
+    public function testThresholdWithDOM()
+    {
+        $this->converter->loadImage(__DIR__.'/darth_vader.png');
+
+        $this->converter->setThreshold(1);
+        $res = $this->converter->toXML()->getElementsByTagName('rect')->length;
+
+        $this->converter->setThreshold(253);
+        $res2 = $this->converter->toXML()->getElementsByTagName('rect')->length;
+
+        $this->assertNotEquals($res, $res2);
     }
 
     /**
