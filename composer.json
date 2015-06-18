@@ -1,0 +1,12 @@
+{
+    "require": {
+        "php" : ">=5.4.0",
+        "ext-gd" : "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Px2svg\\" : "src",
+            "Px2svg\\Test\\" : "test"
+        }
+    }
+}

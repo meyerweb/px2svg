@@ -16,7 +16,6 @@ There are situations where people want to take small bitmaps—think primary-col
 
 This all originally started as a one-off experiment and a bit of a jape.  You can see the original at [flaming-shame](https://github.com/meyerweb/flaming-shame), if you fancy a laugh.
 
-
 ## Who?
 
 [Eric Meyer](http://meyerweb.com/), sometime CSS guy.
@@ -26,3 +25,49 @@ This all originally started as a one-off experiment and a bit of a jape.  You ca
 [Robin Cafolla](https://github.com/robincafolla) made the script command-line usable and encapsulated for use in other code bases, and added posterization.
 
 [Neal Brooks](https://github.com/nealio82) thoroughly refactored the code and removed curl dependency.
+
+## Documentation
+
+### Installation
+
+Using any PSR-4 compatible autoloader.
+
+### Using the library
+
+Converting a Image into a SVG and directly output the corresponding SVG
+
+```php
+
+use Px2svg\Converter;
+
+$converter = new Converter();
+$converter->loadImage('/path/to/my/image.gif');
+$converter->setThreshold(80);
+header('Content-Type: text/xml');
+$res = $converter->generateSVG();
+```
+
+Converting a Image into a SVG and saving the SVG to a file
+
+```php
+
+use Px2svg\Converter;
+
+$converter = new Converter();
+$converter->loadImage('/path/to/my/image.gif');
+$converter->setThreshold(80);
+$res = $converter->saveSVG('/path/to/the/save.svg');
+```
+
+If you need to further manipulate the SVG then you better use `Converter::toXML()` . This method will return a PHP `DOMDocument` object.
+
+```php
+
+use Px2svg\Converter;
+
+$converter = new Converter();
+$converter->loadImage('/path/to/my/image.gif');
+$converter->setThreshold(80);
+$res = $converter->toXML();
+//$res is a DOMDocument object
+```

@@ -11,7 +11,6 @@ SYNOPSIS
 DESCRIPTION
         Turning raster images into SVG files, one pixel at a time. Yes, really.
 
-        
         What?
 
         The PHP accepts a raster image (GIF, PNG, JPEG, that sort of thing) and creates an SVG image that recreates the raster image.
