@@ -195,7 +195,7 @@ class Converter
     /**
      * Create a SVG document from raster depending on
      * its direction HORIZONTALLY OR VERTICALLY
-     *  
+     *
      * @param int $direction horizontal OR vertical
      *
      * @return DOMDocument
@@ -268,7 +268,7 @@ class Converter
      *
      * @return array Color array in form [red: int, green: int, blue: int, alpha: int]
      */
-    protected function getPixelColors($x, y)
+    protected function getPixelColors($x, $y)
     {
         return imagecolorsforindex($this->image, imagecolorat($this->image, $x, $y));
     }
