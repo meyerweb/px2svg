@@ -223,9 +223,14 @@ class Converter
         $imp = new DOMImplementation();
         $dom = $imp->createDocument(
             null,
-            'svg'
+            'svg',
+            $imp->createDocumentType(
+                'svg',
+                '-//W3C//DTD SVG 1.1//EN',
+                'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'
+            )
         );
-        // $dom->encoding     = 'UTF-8';
+        $dom->encoding     = 'UTF-8';
         $dom->formatOutput = true;
         $dom->documentElement->setAttribute('xmlns', 'http://www.w3.org/2000/svg');
         $dom->documentElement->setAttribute('shape-rendering', 'crispEdges');
