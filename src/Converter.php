@@ -234,6 +234,9 @@ class Converter
         $dom->formatOutput = true;
         $dom->documentElement->setAttribute('xmlns', 'http://www.w3.org/2000/svg');
         $dom->documentElement->setAttribute('shape-rendering', 'crispEdges');
+        $dom->documentElement->setAttribute('width', $this->width);
+        $dom->documentElement->setAttribute('height', $this->height);
+        $dom->documentElement->setAttribute('viewBox', '0 0 '.$this->width.' '.$this->height);
 
         return $dom;
     }
