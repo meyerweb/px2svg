@@ -2,7 +2,8 @@
 <head>
 <title>Some examples</title>
 <style type="text/css">
-svg {margin: 1em;}
+div {padding: 1em; border-bottom: 1px dotted silver;}
+svg {margin: 0 1em;}
 </style>
 </head>
 
@@ -13,39 +14,24 @@ require '../src/Converter.php';
 use Px2svg\Converter;
 //header('Content-Type: text/xml');
 
-$converter = new Converter();
-$converter->loadImage('test-horizontal.png');
-$converter->setThreshold(80);
-$res = $converter->generateSVG();
-echo $res;
+$images = array(
+	'test-horizontal.png',
+	'test-vertical.png',
+	'gmail-bozo-tag.gif',
+	'red-nose.gif',
+	'darth_vader.png',
+);
 
+foreach ($images as $img) {
 
-$converter = new Converter();
-$converter->loadImage('test-vertical.png');
-$converter->setThreshold(80);
-$res = $converter->generateSVG();
-echo $res;
-
-
-$converter = new Converter();
-$converter->loadImage('gmail-bozo-tag.gif');
-$converter->setThreshold(80);
-$res = $converter->generateSVG();
-echo $res;
-
-
-$converter = new Converter();
-$converter->loadImage('red-nose.gif');
-$converter->setThreshold(80);
-$res = $converter->generateSVG();
-echo $res;
-
-
-$converter = new Converter();
-$converter->loadImage('darth_vader.png');
-$converter->setThreshold(80);
-$res = $converter->generateSVG();
-echo $res;
+	echo "\n<div>\n<img src='$img'>\n";
+	$converter = new Converter();
+	$converter->loadImage($img);
+	$converter->setThreshold(80);
+	$res = $converter->generateSVG();
+	echo $res;
+	echo "\n</div>\n";
+}
 
 
 ?>
