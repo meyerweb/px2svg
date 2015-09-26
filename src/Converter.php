@@ -293,7 +293,7 @@ class Converter
         if ($direction == self::DIRECTION_HORIZONTAL) {
             $res = $x + $delta;
 
-            return $res > $this->width && $this->checkThreshold($rgba, $this->getPixelColors($res, $y));
+            return $res < $this->width && $this->checkThreshold($rgba, $this->getPixelColors($res, $y));
         }
 
         $res = $y + $delta;

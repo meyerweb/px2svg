@@ -15,10 +15,11 @@ use Px2svg\Converter;
 //header('Content-Type: text/xml');
 
 $images = array(
-	'test-horizontal.png',
-	'test-vertical.png',
-	'gmail-bozo-tag.gif',
+	'red-box.gif',
 	'red-nose.gif',
+	'test-vertical.png',
+	'test-horizontal.png',
+	'gmail-bozo-tag.gif',
 	'darth_vader.png',
 );
 
