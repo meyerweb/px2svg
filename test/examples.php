@@ -15,6 +15,8 @@ use Px2svg\Converter;
 //header('Content-Type: text/xml');
 
 $images = array(
+	'graydient-tiny.gif',
+	'graydient-medium.gif',
 	'red-box.gif',
 	'red-nose.gif',
 	'test-vertical.png',
@@ -28,7 +30,7 @@ foreach ($images as $img) {
 	echo "\n<div>\n<img src='$img'>\n";
 	$converter = new Converter();
 	$converter->loadImage($img);
-	$converter->setThreshold(80);
+	$converter->setThreshold(255);
 	$res = $converter->generateSVG();
 	echo $res;
 	echo "\n</div>\n";

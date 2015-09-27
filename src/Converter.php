@@ -203,12 +203,21 @@ class Converter
     protected function generateSvgFromRaster($direction)
     {
         $svg = $this->createSvgDocument();
-        for ($x = 0; $x < $this->width; ++$x) {
-            $number_of_consecutive_pixels = 1;
-            for ($y = 0; $y < $this->height; $y = $y + $number_of_consecutive_pixels) {
-                $number_of_consecutive_pixels = $this->createLine($svg, $x, $y, $direction);
-            }
-        }
+		if ($direction == self::DIRECTION_HORIZONTAL) {
+		   for ($y = 0; $y < $this->height; ++$y) {
+			  $number_of_consecutive_pixels = 1;
+			  for ($x = 0; $x < $this->width; $x = $x + $number_of_consecutive_pixels) {
+				 $number_of_consecutive_pixels = $this->createLine($svg, $x, $y, $direction);
+			  }
+		   }
+		} else {
+		   for ($x = 0; $x < $this->width; ++$x) {
+			  $number_of_consecutive_pixels = 1;
+			  for ($y = 0; $y < $this->height; $y = $y + $number_of_consecutive_pixels) {
+				 $number_of_consecutive_pixels = $this->createLine($svg, $x, $y, $direction);
+			  }
+		   }
+		}
 
         return $svg;
     }
@@ -274,6 +283,7 @@ class Converter
     protected function getPixelColors($x, $y)
     {
         return imagecolorsforindex($this->image, imagecolorat($this->image, $x, $y));
+//        return imagecolorat($this->image, $x, $y);
     }
 
     /**
@@ -293,12 +303,12 @@ class Converter
         if ($direction == self::DIRECTION_HORIZONTAL) {
             $res = $x + $delta;
 
-            return $res < $this->width && $this->checkThreshold($rgba, $this->getPixelColors($res, $y));
+            return $res < $this->width && ($rgba == $this->getPixelColors($res, $y));
         }
 
         $res = $y + $delta;
 
-        return $res < $this->height && $this->checkThreshold($rgba, $this->getPixelColors($x, $res));
+        return $res < $this->height && ($rgba == $this->getPixelColors($x, $res));
     }
 
     /**
@@ -344,10 +354,11 @@ class Converter
      */
     protected function checkThreshold(array $colorA, array $colorB)
     {
-        return $this->threshold > sqrt(
+        $distance = sqrt(
             pow($colorB['red'] - $colorA['red'], 2) +
             pow($colorB['green'] - $colorA['green'], 2) +
             pow($colorB['blue'] - $colorA['blue'], 2)
         );
+        return $this->threshold > $distance;
     }
 }
