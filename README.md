@@ -36,6 +36,8 @@ Using any PSR-4 compatible autoloader.
 
 ### Using the library
 
+> NOTE:  the following examples currently contain commented-out lines referring to `setThreshold()`.  This portion of the code has been disabled until we can figure out why it’s completely mangling the output in some situations, but not others.  See https://github.com/meyerweb/px2svg/issues/9 for a few more details.  Contributions and questions welcome!
+
 Converting a Image into a SVG and directly output the corresponding SVG
 
 ```php
@@ -44,7 +46,7 @@ use Px2svg\Converter;
 
 $converter = new Converter();
 $converter->loadImage('/path/to/my/image.gif');
-$converter->setThreshold(80);
+//$converter->setThreshold(80);
 header('Content-Type: text/xml');
 $res = $converter->generateSVG();
 ```
@@ -57,7 +59,7 @@ use Px2svg\Converter;
 
 $converter = new Converter();
 $converter->loadImage('/path/to/my/image.gif');
-$converter->setThreshold(80);
+//$converter->setThreshold(80);
 $res = $converter->saveSVG('/path/to/the/save.svg');
 ```
 
@@ -69,7 +71,7 @@ use Px2svg\Converter;
 
 $converter = new Converter();
 $converter->loadImage('/path/to/my/image.gif');
-$converter->setThreshold(80);
+//$converter->setThreshold(80);
 $res = $converter->toXML();
 //$res is a DOMDocument object
 ```
