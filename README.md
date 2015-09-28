@@ -5,7 +5,7 @@ Turning raster images into SVG files, one pixel at a time.  Yes, really.
 
 ## What?
 
-The PHP accepts a raster image (GIF, PNG, JPEG, that sort of thing) and creates an SVG image that recreates the raster image.  It does this by drawing filled rectangles to recreate the pixels in the image.  In many cases, this is literally a 1-by-1 rectangle, but it will check for runs of similar color (similar to GIF compression) and one rectangle per run.  It checks both horizontal and vertical runs to see which approach is more efficient, and returns the better option.
+The PHP accepts a raster image (GIF, PNG, JPEG, that sort of thing) and creates an SVG image that recreates the raster image.  It does this by drawing filled rectangles to recreate the pixels in the image.  In many cases, this is literally a 1-by-1 rectangle, but it will check for runs of similar color (similar to GIF compression) and create one rectangle per run.  It checks both horizontal and vertical runs to see which approach is more efficient, and returns the better option.
 
 The script requires [GD](http://php.net/manual/en/image.installation.php).
 
@@ -26,7 +26,7 @@ This all originally started as a one-off experiment and a bit of a jape.  You ca
 
 [Neal Brooks](https://github.com/nealio82) thoroughly refactored the code and removed curl dependency.
 
-[ignace nyamagana butera](https://github.com/nyamsprod) ported the code to Composer.
+[ignace nyamagana butera](https://github.com/nyamsprod) ported the code to Composer, and refactored some more.
 
 ## Documentation
 
