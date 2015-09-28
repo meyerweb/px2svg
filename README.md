@@ -26,6 +26,8 @@ This all originally started as a one-off experiment and a bit of a jape.  You ca
 
 [Neal Brooks](https://github.com/nealio82) thoroughly refactored the code and removed curl dependency.
 
+[ignace nyamagana butera](https://github.com/nyamsprod) ported the code to Composer.
+
 ## Documentation
 
 ### Installation
